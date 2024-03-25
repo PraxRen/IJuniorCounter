@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -5,40 +6,37 @@ public class Counter : MonoBehaviour
 {
     private const float IntervalForSeconds = 0.5f;
 
-    private bool _isDecrease;
-    private Coroutine _jobUpdateNumber;
+    private bool _isRunning;
 
     public int Number { get; private set; }
 
-    private void OnEnable()
-    {
-        _jobUpdateNumber = StartCoroutine(UpdateNumber());
-    }
+    public event Action<int> Updated;
 
-    private void OnDisable()
+    private void Start()
     {
-        if (_jobUpdateNumber == null)
-            return;
-
-        StopCoroutine(_jobUpdateNumber);
+        StartCoroutine(UpdateNumber());
     }
 
     private void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            _isDecrease = !_isDecrease; 
+            if (_isRunning == false)
+                StartCoroutine(UpdateNumber());
+            else
+                _isRunning = false;
         }
     }
 
     private IEnumerator UpdateNumber()
     {
+        _isRunning = true;
         WaitForSeconds waitForSeconds = new WaitForSeconds(IntervalForSeconds);
 
-        while (true)
+        while (_isRunning)
         {
-            Number = _isDecrease ? Number - 1 : Number + 1;
-            Debug.Log(Number);
+            Number++;
+            Updated?.Invoke(Number);
             yield return waitForSeconds;
         }
     }
