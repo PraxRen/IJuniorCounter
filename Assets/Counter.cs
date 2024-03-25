@@ -6,7 +6,8 @@ public class Counter : MonoBehaviour
 {
     private const float IntervalForSeconds = 0.5f;
 
-    private bool _isRunning;
+    private Coroutine _jobUpdateNumber;
+    private WaitForSeconds _waitForSeconds = new WaitForSeconds(IntervalForSeconds);
 
     public int Number { get; private set; }
 
@@ -14,30 +15,33 @@ public class Counter : MonoBehaviour
 
     private void Start()
     {
-        StartCoroutine(UpdateNumber());
+        _waitForSeconds = new WaitForSeconds(IntervalForSeconds);
+        _jobUpdateNumber = StartCoroutine(UpdateNumber());
     }
 
     private void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            if (_isRunning == false)
-                StartCoroutine(UpdateNumber());
+            if (_jobUpdateNumber != null)
+            {
+                StopCoroutine(_jobUpdateNumber);
+                _jobUpdateNumber = null;
+            }
             else
-                _isRunning = false;
+            {
+                _jobUpdateNumber = StartCoroutine(UpdateNumber());
+            }
         }
     }
 
     private IEnumerator UpdateNumber()
     {
-        _isRunning = true;
-        WaitForSeconds waitForSeconds = new WaitForSeconds(IntervalForSeconds);
-
-        while (_isRunning)
+        while (true)
         {
             Number++;
             Updated?.Invoke(Number);
-            yield return waitForSeconds;
+            yield return _waitForSeconds;
         }
     }
 }
